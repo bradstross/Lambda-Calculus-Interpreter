@@ -1,12 +1,11 @@
 class Node:
-    def __init__(self, expr, token):
-        self.expr = expr
+    def __init__(self, token):
         self.token = token 
         self.left = None
         self.right = None
 
     def __str__(self):
-        return f"Expr: {self.expr} \n Sym: {self.token}"
+        return f"Sym: {self.token}"
     
     # def post_order(node):
     #     for child in node.children:
