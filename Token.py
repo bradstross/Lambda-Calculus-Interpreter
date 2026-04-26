@@ -3,9 +3,10 @@ from enum import Enum
 class TType(Enum):
     VAR = 1
     LAM = 2
-    DOT = 3
-    LP = 4
-    RP = 5
+    APP = 3
+    DOT = 4
+    LP = 5
+    RP = 6
 
 # Lexemes should be the lexed string literals, type should be one of the TType enums
 class Token:
