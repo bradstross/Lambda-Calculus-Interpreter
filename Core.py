@@ -67,6 +67,7 @@ def ATOM(tokens, i):
 def APP(tokens, i):
     term = Node("app")
     term.right, j = ATOM(tokens, i)
+    # iterate applications here
     return term, j    
 
 def ABST(tokens, i):
@@ -82,6 +83,7 @@ def E(tokens, i):
     # I can't believe this is sort of working
     elif tokens[i].type == T.VAR:
         term, j = ATOM(tokens, i)
+        # TODO: make this capable of handling arbitrary insertions of APP nodes
         if tokens[j].type == T.VAR:
             appterm, k = APP(tokens, j)
             appterm.left = term
@@ -94,7 +96,6 @@ def E(tokens, i):
             return term, j
     elif tokens[i].type == T.LP:
         term, j = E(tokens, i+1)
-        #split this off into a method
         if tokens[j].type == T.VAR:
             appterm, k = APP(tokens, j)
             appterm.left = term
@@ -114,15 +115,15 @@ def E(tokens, i):
         return E(tokens, i+1)
             
     return
-
+    
 # test = [1, 2, 3]
 # testvar = test.pop(0)
 # test.pop(0)
 # test3 = 
 
-test, j = E(lex("x (y z)"), 0)
+test, j = E(lex("x y z"), 0)
 Node.in_order(test)
-print(f"{test}, {j}")
+# print(f"{test}, {j}")
 # print(f"{test.left.left}")
 # print(f"{test.right.left}")
 # print(test.left.left)
