@@ -5,14 +5,13 @@
 # E ::= x | (\x.E) | (E E) 
 # Let's change the grammar to make this easier lmao
 # E ::= AB | AP
-# AB ::= \VAR.E
-# AP ::= Atom ( Atom )
-# Atom ::= VAR | (E)
+# AB ::= \x.E
+# AP ::= Atom { Atom }
+# Atom ::= x | (E)
 # TODO: abstract syntax tree/parse tree (implement recursive descent?)
 # https://en.wikipedia.org/wiki/Recursive_descent_parser
 
 from Node import *
-from Term import * 
 from enum import Enum
 from Token import TType as T
 from Token import Token
@@ -51,77 +50,83 @@ def lex(str):
 # for every term in our grammar.
 #   TODO: What is an adequate way to capture applications? Very hard with this lexer style
 
-# we gotta go back to the drawing board. Nodes should be params args and instructions
-def E(tokens):
+# E ::= ABST | APP
+# ABST ::= \x.E
+# APP ::= Atom { Atom }
+# ATOM ::= x | (E)
+
+def ATOM(tokens, i):
+    if tokens[i].type == T.VAR:
+        term = Node("var")
+        term.left = Node(tokens[i].lexeme)
+        return term, i+1 
+    if tokens[i].type == T.LP:
+        term, j = E(tokens, i+1)
+        return term, j
+
+def APP(tokens, i):
+    term = Node("app")
+    term.right, j = ATOM(tokens, i)
+    return term, j    
+
+def ABST(tokens, i):
+    term = Node(tokens[i].lexeme)
+    term.left, j = ATOM(tokens, i+1)
+    term.right, k = E(tokens, j+1)
+    return term, k
+
+def E(tokens, i):
     length = len(tokens)
-    if tokens == []:
-        return 
-    elif tokens[0].type == T.VAR:
-        term = VarExp(tokens[0].lexeme)
-        tokens.pop(0)
-        return term
-    elif tokens[0].type == T.LP and tokens[1].type == T.LAM:
-        tokens.pop(0)
-        lam = tokens.pop(0)
-        # auto-currying multiple arguments below
-        if tokens[0].type == T.VAR and tokens[1].type == T.DOT:
-            term = LambdaExp(E(tokens), E(tokens[1::]))
-            return term
-        elif tokens[0].type == T.VAR and tokens[1].type == T.VAR:
-            term = LambdaExp(E(tokens), E([lam] + tokens[1::]))
-            return term
+    if i > length:
+        return None, i
+    # I can't believe this is sort of working
+    elif tokens[i].type == T.VAR:
+        term, j = ATOM(tokens, i)
+        if tokens[j].type == T.VAR:
+            appterm, k = APP(tokens, j)
+            appterm.left = term
+            return appterm, k
+        elif tokens[j].type == T.LP:
+            appterm, k = APP(tokens, j)
+            appterm.left = term
+            return appterm, k
         else:
-            return "Error: expression not well-formed"
-    elif tokens[0].type == T.LP and tokens[1].type == T.VAR:
-        tokens.pop(0)
-        term = AppExp(E(tokens), E(tokens[1::]))
-        return term
-    elif tokens[0] == T.RP:
-        tokens.pop(0)
-        return E(tokens) 
-    elif tokens[0].type == T.DOT:
-        tokens.pop(0)
-        return E(tokens)
+            return term, j
+    elif tokens[i].type == T.LP:
+        term, j = E(tokens, i+1)
+        #split this off into a method
+        if tokens[j].type == T.VAR:
+            appterm, k = APP(tokens, j)
+            appterm.left = term
+            return appterm, k
+        elif tokens[j].type == T.LP:
+            appterm, k = APP(tokens, j)
+            appterm.left = term
+            return appterm, k
+        return term, j
+    elif tokens[i].type == T.DOT:
+        return E(tokens, i+1)
+    elif tokens[i].type == T.LAM:
+        #TODO: ABST tests/APP syntax
+        term, j = ABST(tokens, i)
+        return term, j  
+    elif tokens[i].type == T.RP:
+        return E(tokens, i+1)
+            
     return
 
-# def E(tokens):
-#     node = Node(None)
-#     length = len(tokens)
-#     i=0
-#     while i < length:
-#         if tokens[i].type == T.VAR:
-#             node.token = tokens[i]
-#             tokens.pop(0)
-#             return node
-#         elif tokens[i].type == T.LP and tokens[i+1].type == T.LAM:
-#             node.token = tokens[i+1]
-#             tokens.pop(0)
-#             tokens.pop(0)
-#             node.left = E(tokens)
-#             # we need an if block here in case of multiple parameters; we want to make new lambdas if yes, move on if no
-#             if tokens[i+2].type == T.VAR: 
-#                 newlam = Token(T.LAM, "\\")
-#                 node.right = E([newlam] + tokens)
-#             else:
-#                 node.right = E(tokens)
-#         elif tokens[i].type == T.DOT:
-#             tokens.pop(0)
-#             return E(tokens)
-#             # this is a bit problematic; how do we model applications on a parse tree?
-#         elif tokens[i].type == T.LP and tokens[i+1].type == T.VAR:
-#             tokens[i+1].type = T.APP
-#             node.token = tokens[i+1]
-#             tokens.pop(0)
-#             tokens.pop(0)
-#         else:
-#             i += 1
-#     return
-
-test = [1, 2, 3]
-testvar = test.pop(0)
-test.pop(0)
+# test = [1, 2, 3]
+# testvar = test.pop(0)
+# test.pop(0)
 # test3 = 
-print(testvar)
+
+test, j = E(lex("x (y z)"), 0)
+Node.in_order(test)
+print(f"{test}, {j}")
+# print(f"{test.left.left}")
+# print(f"{test.right.left}")
+# print(test.left.left)
+# print(test.right.left)
 
 # test = lex("(\\x.(\\y.x))")
 
