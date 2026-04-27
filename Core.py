@@ -67,7 +67,7 @@ def ATOM(tokens, i):
 def APP(tokens, i):
     term = Node("app")
     term.right, j = ATOM(tokens, i)
-    # iterate applications here
+    # TODO: iterate applications here - should be possible in principle
     return term, j    
 
 def ABST(tokens, i):
