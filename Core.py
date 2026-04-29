@@ -59,79 +59,58 @@ def ATOM(tokens, i):
     if tokens[i].type == T.VAR:
         term = Node("var")
         term.left = Node(tokens[i].lexeme)
-        return term, i+1 
+        return term, i + 1 
     if tokens[i].type == T.LP:
-        term, j = E(tokens, i+1)
-        return term, j
+        term, j = E(tokens, i + 1)
+        return term, j  
 
-def APP(tokens, i):
-    term = Node("app")
-    term.right, j = ATOM(tokens, i)
-    # TODO: iterate applications here - should be possible in principle
-    return term, j    
-
-def aux(tokens, term, j, length):
+def APP(tokens, term, j, length):
     if j >= length:
         return term, j
     elif tokens[j].type == T.VAR:
         appterm = Node("app")
         appterm.right, k = ATOM(tokens, j)
         appterm.left = term
-        result, l = aux(tokens, appterm, k, length)
+        result, l = APP(tokens, appterm, k, length)
         return result, l
     elif tokens[j].type == T.LP:
         appterm = Node("app")
         appterm.right, k = ATOM(tokens, j)
         appterm.left = term
-        result, l = aux(tokens, appterm, k, length)
+        result, l = APP(tokens, appterm, k, length)
         return result, l
+    elif tokens[j].type == T.RP:
+        result, k = APP(tokens, term, j + 1, length)
+        return result, k
     else:
         return term, j
 
 def ABST(tokens, i):
     term = Node(tokens[i].lexeme)
-    term.left, j = ATOM(tokens, i+1)
-    term.right, k = E(tokens, j+1)
+    term.left, j = ATOM(tokens, i + 1)
+    term.right, k = E(tokens, j + 1)
     return term, k
 
 def E(tokens, i):
     length = len(tokens)
     if i > length:
         return None, i
-    # I can't believe this is sort of working
     elif tokens[i].type == T.VAR:
         term, j = ATOM(tokens, i)
-        # TODO: make this capable of handling arbitrary insertions of APP nodes
-        term, j = aux(tokens, term, j, length)
-        # if tokens[j].type == T.VAR:
-        #     appterm, k = APP(tokens, j)
-        #     appterm.left = term
-        #     return appterm, k
-        # elif tokens[j].type == T.LP:
-        #     appterm, k = APP(tokens, j)
-        #     appterm.left = term
-        #     return appterm, k
+        term, j = APP(tokens, term, j, length)
         return term, j
     elif tokens[i].type == T.LP:
-        term, j = E(tokens, i+1)
-        if tokens[j].type == T.VAR:
-            appterm, k = APP(tokens, j)
-            appterm.left = term
-            return appterm, k
-        elif tokens[j].type == T.LP:
-            appterm, k = APP(tokens, j)
-            appterm.left = term
-            return appterm, k
+        term, j = E(tokens, i + 1)
+        term, j = APP(tokens, term, j, length)
         return term, j
     elif tokens[i].type == T.DOT:
-        return E(tokens, i+1)
+        return E(tokens, i + 1)
     elif tokens[i].type == T.LAM:
         #TODO: ABST tests/APP syntax
         term, j = ABST(tokens, i)
         return term, j  
     elif tokens[i].type == T.RP:
-        return E(tokens, i+1)
-            
+        return E(tokens, i + 1)        
     return
     
 # test = [1, 2, 3]
@@ -139,7 +118,7 @@ def E(tokens, i):
 # test.pop(0)
 # test3 = 
 
-test, j = E(lex("x y z"), 0)
+test, j = E(lex("x (y z) a"), 0)
 Node.in_order(test)
 # print(f"{test}, {j}")
 # print(f"{test.left.left}")
