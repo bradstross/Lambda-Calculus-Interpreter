@@ -70,6 +70,24 @@ def APP(tokens, i):
     # TODO: iterate applications here - should be possible in principle
     return term, j    
 
+def aux(tokens, term, j, length):
+    if j >= length:
+        return term, j
+    elif tokens[j].type == T.VAR:
+        appterm = Node("app")
+        appterm.right, k = ATOM(tokens, j)
+        appterm.left = term
+        result, l = aux(tokens, appterm, k, length)
+        return result, l
+    elif tokens[j].type == T.LP:
+        appterm = Node("app")
+        appterm.right, k = ATOM(tokens, j)
+        appterm.left = term
+        result, l = aux(tokens, appterm, k, length)
+        return result, l
+    else:
+        return term, j
+
 def ABST(tokens, i):
     term = Node(tokens[i].lexeme)
     term.left, j = ATOM(tokens, i+1)
@@ -84,16 +102,16 @@ def E(tokens, i):
     elif tokens[i].type == T.VAR:
         term, j = ATOM(tokens, i)
         # TODO: make this capable of handling arbitrary insertions of APP nodes
-        if tokens[j].type == T.VAR:
-            appterm, k = APP(tokens, j)
-            appterm.left = term
-            return appterm, k
-        elif tokens[j].type == T.LP:
-            appterm, k = APP(tokens, j)
-            appterm.left = term
-            return appterm, k
-        else:
-            return term, j
+        term, j = aux(tokens, term, j, length)
+        # if tokens[j].type == T.VAR:
+        #     appterm, k = APP(tokens, j)
+        #     appterm.left = term
+        #     return appterm, k
+        # elif tokens[j].type == T.LP:
+        #     appterm, k = APP(tokens, j)
+        #     appterm.left = term
+        #     return appterm, k
+        return term, j
     elif tokens[i].type == T.LP:
         term, j = E(tokens, i+1)
         if tokens[j].type == T.VAR:
