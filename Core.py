@@ -79,6 +79,7 @@ def APP(tokens, term, j, length):
         appterm.left = term
         result, l = APP(tokens, appterm, k, length)
         return result, l
+    # add a boolean param that checks whether we have already seen an RP
     elif tokens[j].type == T.RP:
         result, k = APP(tokens, term, j + 1, length)
         return result, k
@@ -108,6 +109,7 @@ def E(tokens, i):
     elif tokens[i].type == T.LAM:
         #TODO: ABST tests/APP syntax
         term, j = ABST(tokens, i)
+        term, j = APP(tokens, term, j, length)
         return term, j  
     elif tokens[i].type == T.RP:
         return E(tokens, i + 1)        
@@ -118,7 +120,7 @@ def E(tokens, i):
 # test.pop(0)
 # test3 = 
 
-test, j = E(lex("x (y z) a"), 0)
+test, j = E(lex("(\\x.(\\y.(x y))) z"), 0)
 Node.in_order(test)
 # print(f"{test}, {j}")
 # print(f"{test.left.left}")
