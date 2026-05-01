@@ -62,7 +62,7 @@ def ATOM(tokens, i):
         return term, i + 1 
     if tokens[i].type == T.LP:
         term, j = E(tokens, i + 1)
-        return term, j  
+        return term, (j + 1)  
 
 def APP(tokens, term, j, length):
     if j >= length:
@@ -81,15 +81,14 @@ def APP(tokens, term, j, length):
         return result, l
     # add a boolean param that checks whether we have already seen an RP
     elif tokens[j].type == T.RP:
-        result, k = APP(tokens, term, j + 1, length)
-        return result, k
+        return term, j
     else:
         return term, j
 
 def ABST(tokens, i):
     term = Node(tokens[i].lexeme)
     term.left, j = ATOM(tokens, i + 1)
-    term.right, k = E(tokens, j + 1)
+    term.right, k = ATOM(tokens, j + 1)
     return term, k
 
 def E(tokens, i):
@@ -101,7 +100,7 @@ def E(tokens, i):
         term, j = APP(tokens, term, j, length)
         return term, j
     elif tokens[i].type == T.LP:
-        term, j = E(tokens, i + 1)
+        term, j = ATOM(tokens, i)
         term, j = APP(tokens, term, j, length)
         return term, j
     elif tokens[i].type == T.DOT:
