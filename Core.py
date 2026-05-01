@@ -1,15 +1,10 @@
-# Goal is to eventually make this an interpreter for lambda calculus
-# TODO: Parser for lambda caclulus
-#   We want to use some kind of formal parsing structure for this.
-# Lambda caclulus has a simple structure
-# E ::= x | (\x.E) | (E E) 
-# Let's change the grammar to make this easier lmao
+# TODO: Parser testing
+# TODO: Implement evaluator
+# Lambda caclulus with this grammar
 # E ::= AB | AP
 # AB ::= \x.E
 # AP ::= Atom { Atom }
 # Atom ::= x | (E)
-# TODO: abstract syntax tree/parse tree (implement recursive descent?)
-# https://en.wikipedia.org/wiki/Recursive_descent_parser
 
 from Node import *
 from enum import Enum
@@ -46,15 +41,6 @@ def lex(str):
             i += 1
     return tokens
 
-# TODO: Now that we've got a lexer, we want a parser. This will require objects
-# for every term in our grammar.
-#   TODO: What is an adequate way to capture applications? Very hard with this lexer style
-
-# E ::= ABST | APP
-# ABST ::= \x.E
-# APP ::= Atom { Atom }
-# ATOM ::= x | (E)
-
 def ATOM(tokens, i):
     if tokens[i].type == T.VAR:
         term = Node("var")
@@ -79,7 +65,6 @@ def APP(tokens, term, j, length):
         appterm.left = term
         result, l = APP(tokens, appterm, k, length)
         return result, l
-    # add a boolean param that checks whether we have already seen an RP
     elif tokens[j].type == T.RP:
         return term, j
     else:
@@ -106,7 +91,6 @@ def E(tokens, i):
     elif tokens[i].type == T.DOT:
         return E(tokens, i + 1)
     elif tokens[i].type == T.LAM:
-        #TODO: ABST tests/APP syntax
         term, j = ABST(tokens, i)
         term, j = APP(tokens, term, j, length)
         return term, j  
